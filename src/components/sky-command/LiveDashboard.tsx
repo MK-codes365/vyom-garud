@@ -22,15 +22,7 @@ const LoadingFallback = ({ title }: { title: string }) => (
 export function LiveDashboard() {
   return (
     <div className="space-y-6">
-      {/* Video Stream */}
-      <div>
-        <h2 className="text-xl font-bold text-slate-200 mb-4">Camera Feeds</h2>
-        <Suspense fallback={<LoadingFallback title="Video Stream" />}>
-          <VideoStreamPanel />
-        </Suspense>
-      </div>
-
-      {/* Telemetry Overview */}
+      {/* Telemetry Overview - Always Visible */}
       <div>
         <h2 className="text-xl font-bold text-slate-200 mb-4">Live Telemetry</h2>
         <Suspense fallback={<LoadingFallback title="Telemetry" />}>
@@ -38,10 +30,10 @@ export function LiveDashboard() {
         </Suspense>
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Column - Maps and Charts */}
-        <div className="col-span-1 flex flex-col gap-6 lg:col-span-2">
+      {/* Main Grid - Video on right, Map/Chart on left */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+        {/* Left Column - Maps and Charts (wider) */}
+        <div className="col-span-1 flex flex-col gap-6 lg:col-span-3">
           <div>
             <h2 className="text-lg font-bold text-slate-200 mb-4">Flight Path & Monitoring</h2>
             <Suspense fallback={<LoadingFallback title="Map" />}>
@@ -56,8 +48,14 @@ export function LiveDashboard() {
           </div>
         </div>
 
-        {/* Right Column - Controls and AI */}
+        {/* Right Column - Video and Controls (compact) */}
         <div className="col-span-1 flex flex-col gap-6">
+          <div>
+            <h2 className="text-lg font-bold text-slate-200 mb-4">Camera Feeds</h2>
+            <Suspense fallback={<LoadingFallback title="Video Stream" />}>
+              <VideoStreamPanel />
+            </Suspense>
+          </div>
           <div>
             <h2 className="text-lg font-bold text-slate-200 mb-4">Manual Control</h2>
             <Suspense fallback={<LoadingFallback title="Control Panel" />}>

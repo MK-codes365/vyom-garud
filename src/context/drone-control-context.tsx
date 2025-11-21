@@ -66,8 +66,8 @@ export function DroneControlProvider({ children }: { children: React.ReactNode }
     createdAt: Date.now(),
   });
   const [geofences, setGeofences] = useState<Geofence[]>([
-    { id: 1, name: "Mission Area", lat: 0, lng: 0, radius: 500, active: true },
-    { id: 2, name: "No-Fly Zone 1", lat: 0.003, lng: 0.003, radius: 100, active: true },
+    { id: 1, name: "Mission Area", lat: 34.0522, lng: -118.2437, radius: 500, active: true },
+    { id: 2, name: "No-Fly Zone 1", lat: 34.0522, lng: -118.2437, radius: 100, active: true },
   ]);
 
   // Calculate distance between two coordinates in meters

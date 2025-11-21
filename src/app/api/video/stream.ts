@@ -18,67 +18,93 @@ const activeCameras: Map<string, Camera> = new Map([
 let frameCounter = 0;
 
 /**
- * Generates mock H.264 video frame data
- * In production, this would decode actual RTSP stream
+ * Generate a simple PNG frame as base64
+ * This creates a visual test pattern that changes over time
  */
-function generateMockVideoFrame(width: number = 640, height: number = 480): Uint8Array {
-  // Simple pattern: alternating frames with timestamp
+function generatePngFrame(cameraId: string): string {
   frameCounter++;
+  const timestamp = Date.now();
   
-  // Create a mock H.264 frame (NAL unit start code + data)
-  const frameData = new Uint8Array(width * height + 100);
+  // Create a canvas-like drawing with SVG (simpler than PNG generation)
+  // This creates an animated test pattern
+  const colors = cameraId === 'thermal' 
+    ? { bg: '#ff6b1a', accent: '#ff0000', text: '#ffffff' }
+    : { bg: '#1e40af', accent: '#3b82f6', text: '#e0e7ff' };
   
-  // H.264 NAL unit start code
-  frameData[0] = 0x00;
-  frameData[1] = 0x00;
-  frameData[2] = 0x00;
-  frameData[3] = 0x01;
+  const animValue = (frameCounter * 5) % 360;
+  const barWidth = ((frameCounter * 3) % 200) + 50;
   
-  // Add frame number pattern
-  for (let i = 4; i < frameData.length; i++) {
-    frameData[i] = (frameCounter + i) % 256;
-  }
-  
-  return frameData;
-}
-
-/**
- * Converts mock H.264 to JPEG for browser display
- * In production, use ffmpeg or similar to decode H.264
- */
-function generateMockJpegFrame(): string {
-  // Create a simple gradient image as mock JPEG (base64)
-  // This is a minimal valid JPEG for demo purposes
-  const timestamp = Date.now() % 1000;
-  
-  // Generate a simple pattern base64 that changes with time
-  const pattern = btoa(`MOCK_VIDEO_FRAME_${frameCounter}_TIME_${timestamp}`);
-  
-  return `data:image/svg+xml;base64,${btoa(`
+  const svg = `
     <svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#1e293b;stop-opacity:1" />
-          <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1" />
+          <stop offset="0%" style="stop-color:${colors.bg};stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#000000;stop-opacity:1" />
         </linearGradient>
       </defs>
+      
+      <!-- Background -->
       <rect width="640" height="480" fill="url(#grad)"/>
-      <text x="20" y="40" font-size="24" fill="#60a5fa" font-family="monospace">
-        Frame: ${frameCounter}
+      
+      <!-- Top bar with camera info -->
+      <rect width="640" height="60" fill="rgba(0,0,0,0.7)"/>
+      <text x="20" y="35" font-size="28" font-weight="bold" fill="${colors.text}" font-family="monospace">
+        ${cameraId === 'thermal' ? '🌡️ THERMAL' : '📷 MAIN'} CAMERA
       </text>
-      <text x="20" y="80" font-size="16" fill="#94a3b8" font-family="monospace">
-        Time: ${timestamp}ms
+      
+      <!-- Frame counter and timestamp -->
+      <text x="20" y="470" font-size="12" fill="${colors.accent}" font-family="monospace">
+        Frame: ${frameCounter} | Time: ${(timestamp % 10000).toFixed(0)}ms
       </text>
-      <rect x="50" y="150" width="${(timestamp % 100) * 4}" height="40" fill="#22c55e" opacity="0.7"/>
-      <circle cx="320" cy="240" r="${50 + (frameCounter % 50)}" fill="none" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+      
+      <!-- Animated visual indicator -->
+      <circle cx="320" cy="240" r="100" fill="none" stroke="${colors.accent}" stroke-width="2" opacity="0.5"/>
+      <circle cx="320" cy="240" r="${60 + Math.sin(frameCounter * 0.1) * 20}" fill="none" stroke="${colors.accent}" stroke-width="3" opacity="0.7"/>
+      
+      <!-- Animated bar -->
+      <rect x="50" y="180" width="${barWidth}" height="40" fill="${colors.accent}" opacity="0.6"/>
+      
+      <!-- Grid pattern -->
+      ${Array.from({length: 8}, (_, i) => 
+        `<line x1="${i * 80}" y1="70" x2="${i * 80}" y2="470" stroke="${colors.accent}" stroke-width="1" opacity="0.1"/>`
+      ).join('')}
+      ${Array.from({length: 6}, (_, i) => 
+        `<line x1="0" y1="${70 + i * 67}" x2="640" y2="${70 + i * 67}" stroke="${colors.accent}" stroke-width="1" opacity="0.1"/>`
+      ).join('')}
+      
+      <!-- FPS indicator -->
+      <text x="560" y="40" font-size="14" fill="${colors.accent}" font-family="monospace" text-anchor="end">
+        ~30 FPS
+      </text>
+      
+      <!-- Resolution info -->
+      <text x="560" y="55" font-size="12" fill="${colors.text}" font-family="monospace" text-anchor="end">
+        640x480
+      </text>
+      
+      <!-- Test pattern elements -->
+      <rect x="100" y="290" width="40" height="40" fill="${colors.accent}" opacity="0.5"/>
+      <rect x="180" y="290" width="40" height="40" fill="${colors.accent}" opacity="0.6"/>
+      <rect x="260" y="290" width="40" height="40" fill="${colors.accent}" opacity="0.7"/>
+      <rect x="340" y="290" width="40" height="40" fill="${colors.accent}" opacity="0.8"/>
+      <rect x="420" y="290" width="40" height="40" fill="${colors.accent}" opacity="0.9"/>
+      
+      <!-- Rotating indicator -->
+      <g transform="translate(320, 120)">
+        <circle r="30" fill="none" stroke="${colors.accent}" stroke-width="2" opacity="0.5"/>
+        <line x1="0" y1="0" x2="0" y2="-30" stroke="${colors.accent}" stroke-width="2" 
+              transform="rotate(${animValue})" opacity="0.8"/>
+      </g>
     </svg>
-  `)}`;
+  `;
+  
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 }
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const cameraId = searchParams.get('camera') || 'main';
-  const format = searchParams.get('format') || 'mjpeg';
+  const format = searchParams.get('format') || 'jpeg';
 
   const camera = activeCameras.get(cameraId);
   
@@ -89,39 +115,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (format === 'mjpeg') {
-    // Motion JPEG stream over HTTP
-    return new NextResponse(
-      new ReadableStream({
-        async start(controller) {
-          try {
-            for (let i = 0; i < 1000; i++) { // Stream 1000 frames then close
-              const frame = generateMockJpegFrame();
-              const boundary = '--BOUNDARY\r\nContent-Type: image/svg+xml\r\n';
-              const frameData = `${boundary}Content-Length: ${frame.length}\r\n\r\n${frame}\r\n`;
-              
-              controller.enqueue(frameData);
-              await new Promise(resolve => setTimeout(resolve, 33)); // ~30fps
-            }
-            controller.close();
-          } catch (error) {
-            controller.error(error);
-          }
-        },
-      }),
-      {
-        headers: {
-          'Content-Type': 'multipart/x-mixed-replace; boundary=BOUNDARY',
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Connection': 'keep-alive',
-        },
-      }
-    );
-  }
-
   if (format === 'jpeg') {
     // Single JPEG frame
-    const frame = generateMockJpegFrame();
+    const frame = generatePngFrame(cameraId);
     return new NextResponse(frame, {
       headers: {
         'Content-Type': 'image/svg+xml',

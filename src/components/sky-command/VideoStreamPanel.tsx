@@ -32,7 +32,7 @@ export function VideoStreamPanel() {
   const [newCameraName, setNewCameraName] = useState("");
   const [newCameraUrl, setNewCameraUrl] = useState("");
   const [selectedCameraToRemove, setSelectedCameraToRemove] = useState<string | null>(null);
-  const videoRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load cameras on mount
@@ -43,41 +43,15 @@ export function VideoStreamPanel() {
   // Set initial video source
   useEffect(() => {
     if (activeCamera) {
-      setVideoSource(`/api/video/stream?camera=${activeCamera.id}&format=jpeg`);
+      // Use telemetry MP4 for video stream
+      setVideoSource("/telemetry.mp4");
     }
   }, [activeCamera]);
 
-  // Poll for video frames
-  useEffect(() => {
-    if (!videoSource) return;
-
-    const pollFrame = async () => {
-      try {
-        const response = await fetch(videoSource);
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          if (videoRef.current) {
-            videoRef.current.src = url;
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch video frame:", err);
-      }
-    };
-
-    // Poll every 33ms (~30fps)
-    pollingRef.current = setInterval(pollFrame, 33);
-    pollFrame(); // Initial frame
-
-    return () => {
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [videoSource]);
-
   const handleSwitchCamera = (cameraId: string) => {
     switchCamera(cameraId);
-    setVideoSource(`/api/video/stream?camera=${cameraId}&format=jpeg`);
+    // All cameras use the same MP4 file
+    setVideoSource("/telemetry.mp4");
   };
 
   const handleAddCamera = () => {
@@ -146,18 +120,31 @@ export function VideoStreamPanel() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="relative bg-slate-950 aspect-video flex items-center justify-center border-t border-slate-700/50">
-            <img
-              ref={videoRef}
-              src={videoSource}
-              alt="Video stream"
-              className="w-full h-full object-cover"
-              onError={() => {
-                if (videoRef.current) {
-                  videoRef.current.style.display = "none";
-                }
-              }}
-            />
+          <div className="relative bg-slate-950 aspect-square md:aspect-video lg:aspect-video flex items-center justify-center border-t border-slate-700/50 overflow-hidden" style={{ maxHeight: '300px' }}>
+            {videoSource && (
+              <video
+                ref={videoRef as React.RefObject<HTMLVideoElement>}
+                src={videoSource}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                onError={() => {
+                  if (videoRef.current) {
+                    videoRef.current.style.display = "none";
+                  }
+                }}
+              />
+            )}
+            {!videoSource && (
+              <div className="flex flex-col items-center justify-center w-full h-full text-slate-400">
+                <div className="text-center">
+                  <div className="animate-pulse mb-2">Loading video stream...</div>
+                  <div className="text-xs text-slate-500">Initializing camera connection</div>
+                </div>
+              </div>
+            )}
             <div className="absolute bottom-4 left-4 flex gap-2 text-xs text-slate-400">
               <span className="px-2 py-1 bg-slate-900/80 rounded">FPS: ~30</span>
               <span className="px-2 py-1 bg-slate-900/80 rounded">640x480</span>

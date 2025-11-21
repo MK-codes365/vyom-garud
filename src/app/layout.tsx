@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   title: 'VyomGarud - Cloud-based Drone Control System',
   description: 'Enterprise-grade drone control with real-time telemetry, AI-powered flight optimization, mission planning, and advanced monitoring.',
   icons: {
-    icon: '/vyomgarud-logo.svg',
+    icon: [
+      { url: '/vyomgarud-logo.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' },
+    ],
+    apple: '/apple-touch-icon.png',
   },
   metadataBase: new URL('https://vyomgarud.vercel.app'),
   openGraph: {
@@ -14,6 +18,13 @@ export const metadata: Metadata = {
     description: 'Enterprise-grade drone control with real-time telemetry and AI optimization',
     url: 'https://vyomgarud.vercel.app',
     type: 'website',
+    images: [
+      {
+        url: '/vyomgarud-logo.svg',
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
 };
 
