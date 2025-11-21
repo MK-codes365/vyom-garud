@@ -118,12 +118,17 @@ export default function HomePage() {
       <section className="max-w-6xl mx-auto px-6 py-20">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-30 blur-3xl rounded-3xl"></div>
-          <div className="relative bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-2xl p-8 border border-slate-600/50 h-96 flex items-center justify-center backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300">
-            <div className="text-center">
-              <Zap className="w-16 h-16 text-cyan-400 mx-auto mb-4 animate-pulse" />
-              <p className="text-slate-300 text-lg font-semibold">Live Dashboard Preview</p>
-              <p className="text-slate-500 text-sm mt-2">Real-time flight monitoring interface</p>
-            </div>
+          <div className="relative bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-2xl p-0 border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300">
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-96 object-cover"
+              style={{ objectFit: 'cover' }}
+            >
+              <source src="/dashboard.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
       </section>
