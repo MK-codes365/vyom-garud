@@ -92,6 +92,12 @@ export function AISuggestionsPanel() {
             </div>
           </div>
         )}
+        {!isLoading && !result && (
+          <div className="text-center py-6">
+            <p className="text-slate-400 text-sm mb-4">AI-powered flight suggestions powered by Google Gemini</p>
+            <p className="text-xs text-slate-500">Analyzes your telemetry and weather data to optimize your flight plan</p>
+          </div>
+        )}
       </CardContent>
       <CardFooter className="border-t border-slate-700/30 pt-6">
         <Button onClick={handleAnalyze} disabled={isLoading} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">

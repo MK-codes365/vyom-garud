@@ -26,7 +26,7 @@ Please provide optimization suggestions in JSON format with these exact keys:
 }`;
 
     const response = await fetch(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY,
+      'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY,
       {
         method: 'POST',
         headers: {
@@ -51,11 +51,38 @@ Please provide optimization suggestions in JSON format with these exact keys:
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Gemini API error:', error);
+      const errorText = await response.text();
+      console.error('Gemini API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        url: 'https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=' + GEMINI_API_KEY
+      });
+      
+      if (response.status === 404) {
+        return {
+          success: false,
+          error: 'Gemini API endpoint not found (404). The API key or endpoint may be invalid.'
+        };
+      }
+      
+      if (response.status === 401) {
+        return {
+          success: false,
+          error: 'Invalid Gemini API key (401). Please check your API key configuration.'
+        };
+      }
+      
+      if (response.status === 400) {
+        return {
+          success: false,
+          error: `Bad request (400): ${errorText.substring(0, 100)}`
+        };
+      }
+      
       return {
         success: false,
-        error: `Gemini API error: ${response.status}`
+        error: `Gemini API error: ${response.status} ${response.statusText}`
       };
     }
 
