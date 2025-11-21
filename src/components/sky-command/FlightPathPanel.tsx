@@ -14,8 +14,12 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Dynamically import map to avoid SSR issues
 const MapComponent = dynamic(() => import('./MapComponent'), {
-  loading: () => <div className="w-full h-96 bg-slate-900 flex items-center justify-center text-slate-400">Loading map...</div>,
-  ssr: false
+  loading: () => (
+    <div className="w-full h-96 bg-slate-900 flex items-center justify-center text-slate-400">
+      Loading map...
+    </div>
+  ),
+  ssr: false,
 });
 
 export function FlightPathPanel() {
@@ -45,18 +49,13 @@ export function FlightPathPanel() {
       <CardContent className="p-0">
         <div className="w-full h-96 bg-slate-900/50">
           <ErrorBoundary componentName="Map">
-            <MapComponent 
+            <MapComponent
               dronePosition={dronePosition}
               latitude={telemetry.latitude}
               longitude={telemetry.longitude}
               altitude={telemetry.altitude}
             />
           </ErrorBoundary>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}          />
         </div>
       </CardContent>
     </Card>
