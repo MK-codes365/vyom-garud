@@ -18,9 +18,9 @@ export interface VideoContextType {
 
   // Camera operations
   loadCameras: () => Promise<void>;
-  switchCamera: (cameraId: string) => Promise<void>;
-  addCamera: (name: string, rtspUrl: string) => Promise<void>;
-  removeCamera: (cameraId: string) => Promise<void>;
+  switchCamera: (cameraId: string) => void;
+  addCamera: (name: string, rtspUrl: string) => void;
+  removeCamera: (cameraId: string) => void;
 
   // Recording state
   isRecording: boolean;
@@ -58,92 +58,47 @@ export function VideoProvider({ children }: { children: React.ReactNode }) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Load cameras from API
+  // Load cameras from API (or use defaults)
   const loadCameras = useCallback(async () => {
-    setIsLoading(true);
+    setIsLoading(false);
     setError(null);
-    try {
-      const response = await fetch('/api/video/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'list' }),
-      });
-
-      if (!response.ok) throw new Error('Failed to load cameras');
-
-      const data = await response.json();
-      setCameras(data.cameras);
-      setActiveCamera(data.activeCamera);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load cameras');
-    } finally {
-      setIsLoading(false);
-    }
+    // Cameras are already initialized in state, no API call needed
+    // Return the current cameras
   }, []);
 
   // Switch active camera
   const switchCamera = useCallback(async (cameraId: string) => {
-    setIsLoading(true);
+    setIsLoading(false);
     setError(null);
-    try {
-      const response = await fetch('/api/video/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'switch', cameraId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to switch camera');
-
-      const data = await response.json();
-      setActiveCamera(data.camera);
+    // Find the camera and switch it
+    const camera = cameras.find(cam => cam.id === cameraId);
+    if (camera) {
+      setActiveCamera(camera);
       setCameras(prev =>
         prev.map(cam => ({
           ...cam,
           active: cam.id === cameraId,
         }))
       );
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to switch camera');
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
+  }, [cameras]);
 
   // Add new camera
-  const addCamera = useCallback(async (name: string, rtspUrl: string) => {
+  const addCamera = useCallback((name: string, rtspUrl: string) => {
     setError(null);
-    try {
-      const response = await fetch('/api/video/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add', cameraName: name, rtspUrl }),
-      });
-
-      if (!response.ok) throw new Error('Failed to add camera');
-
-      const data = await response.json();
-      setCameras(prev => [...prev, data.camera]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add camera');
-    }
+    const newCamera: Camera = {
+      id: `camera_${Date.now()}`,
+      name: name,
+      rtspUrl: rtspUrl,
+      active: false,
+    };
+    setCameras(prev => [...prev, newCamera]);
   }, []);
 
   // Remove camera
-  const removeCamera = useCallback(async (cameraId: string) => {
+  const removeCamera = useCallback((cameraId: string) => {
     setError(null);
-    try {
-      const response = await fetch('/api/video/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'remove', cameraId }),
-      });
-
-      if (!response.ok) throw new Error('Failed to remove camera');
-
-      setCameras(prev => prev.filter(cam => cam.id !== cameraId));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove camera');
-    }
+    setCameras(prev => prev.filter(cam => cam.id !== cameraId));
   }, []);
 
   // Start recording

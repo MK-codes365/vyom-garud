@@ -75,24 +75,24 @@ export function VideoStreamPanel() {
     };
   }, [videoSource]);
 
-  const handleSwitchCamera = async (cameraId: string) => {
-    await switchCamera(cameraId);
+  const handleSwitchCamera = (cameraId: string) => {
+    switchCamera(cameraId);
     setVideoSource(`/api/video/stream?camera=${cameraId}&format=jpeg`);
   };
 
-  const handleAddCamera = async () => {
+  const handleAddCamera = () => {
     if (!newCameraName || !newCameraUrl) {
       alert("Please fill in all fields");
       return;
     }
-    await addCamera(newCameraName, newCameraUrl);
+    addCamera(newCameraName, newCameraUrl);
     setNewCameraName("");
     setNewCameraUrl("");
     setIsAddingCamera(false);
   };
 
-  const handleRemoveCamera = async (cameraId: string) => {
-    await removeCamera(cameraId);
+  const handleRemoveCamera = (cameraId: string) => {
+    removeCamera(cameraId);
     setSelectedCameraToRemove(null);
   };
 
