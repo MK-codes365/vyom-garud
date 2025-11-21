@@ -1,0 +1,230 @@
+"use client";
+
+import type { TelemetryData } from '@/lib/types';
+import { useState, useEffect } from 'react';
+import { parseMAVLinkMessage } from '@/lib/mavlink-parser';
+
+const initialData: TelemetryData = {
+  altitude: 100,
+  speed: 0,
+  latitude: 34.0522,
+  longitude: -118.2437,
+  battery: 85,
+  roll: 0,
+  pitch: 0,
+  yaw: 0,
+  heartbeat: false,
+  flightMode: 'DISCONNECTED',
+};
+
+type TelemetryHistoryPoint = {
+    time: string;
+    altitude: number;
+    speed: number;
+}
+
+const MAX_HISTORY_LENGTH = 30;
+
+export function useDroneData() {
+  const [telemetry, setTelemetry] = useState<TelemetryData>(initialData);
+  const [isConnected, setIsConnected] = useState(false);
+  const [telemetryHistory, setTelemetryHistory] = useState<TelemetryHistoryPoint[]>([]);
+  const [useWebSocket, setUseWebSocket] = useState(true); // Try WebSocket first, fall back to polling
+
+  // Try WebSocket connection first
+  useEffect(() => {
+    if (!useWebSocket) return;
+
+    let eventSource: EventSource | null = null;
+    let isSubscribed = true;
+    let connectionTimeout: NodeJS.Timeout;
+
+    const connectWebSocket = () => {
+      try {
+        eventSource = new EventSource('/api/telemetry/stream');
+
+        eventSource.onopen = () => {
+          if (isSubscribed) {
+            setIsConnected(true);
+            clearTimeout(connectionTimeout);
+          }
+        };
+
+        eventSource.onmessage = (event) => {
+          if (!isSubscribed) return;
+
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'telemetry') {
+              const now = new Date();
+              const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+              setTelemetry((prevData) => {
+                const updated = { ...prevData, ...data.telemetry };
+                
+                // Add to history
+                setTelemetryHistory((hist) => {
+                  const newHist = [
+                    ...hist,
+                    {
+                      time: timeStr,
+                      altitude: updated.altitude,
+                      speed: updated.speed,
+                    },
+                  ];
+                  return newHist.slice(-MAX_HISTORY_LENGTH);
+                });
+
+                return updated;
+              });
+            }
+          } catch (error) {
+            console.error('Error parsing telemetry data:', error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          if (isSubscribed) {
+            setIsConnected(false);
+            // Fall back to polling
+            setUseWebSocket(false);
+          }
+        };
+
+        // Set connection timeout
+        connectionTimeout = setTimeout(() => {
+          if (!isConnected && isSubscribed) {
+            console.warn('WebSocket connection timeout, falling back to polling');
+            setUseWebSocket(false);
+            if (eventSource) {
+              eventSource.close();
+            }
+          }
+        }, 5000);
+      } catch (error) {
+        console.error('Failed to create WebSocket:', error);
+        if (isSubscribed) {
+          setUseWebSocket(false);
+        }
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(connectionTimeout);
+      if (eventSource) {
+        eventSource.close();
+      }
+    };
+  }, [useWebSocket, isConnected]);
+
+  // Fall back to polling if WebSocket fails
+  useEffect(() => {
+    if (useWebSocket) return;
+
+    let isSubscribed = true;
+    let pollingInterval: NodeJS.Timeout;
+
+    const startPolling = async () => {
+      // Initial connection delay to show connecting state
+      const connectionTimeout = setTimeout(() => {
+        if (isSubscribed) {
+          setIsConnected(true);
+        }
+      }, 2000);
+
+      pollingInterval = setInterval(async () => {
+        if (!isSubscribed) return;
+
+        try {
+          const response = await fetch('/api/telemetry');
+          const data = await response.json();
+
+          if (data.success && data.telemetry) {
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            setTelemetry((prevData) => {
+              const updated = { ...prevData, ...data.telemetry };
+
+              setTelemetryHistory((hist) => {
+                const newHist = [
+                  ...hist,
+                  {
+                    time: timeStr,
+                    altitude: updated.altitude,
+                    speed: updated.speed,
+                  },
+                ];
+                return newHist.slice(-MAX_HISTORY_LENGTH);
+              });
+
+              return updated;
+            });
+
+            setIsConnected(true);
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+          setIsConnected(false);
+        }
+      }, 100); // Poll every 100ms (10 Hz, matches WebSocket frequency)
+
+      return () => {
+        clearTimeout(connectionTimeout);
+        clearInterval(pollingInterval);
+      };
+    };
+
+    startPolling();
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(pollingInterval);
+    };
+  }, [useWebSocket]);
+
+  return { telemetry, isConnected, telemetryHistory };
+}
+
+            const newHistoryPoint = {
+                time: newTime,
+                altitude: newAltitude,
+                speed: newSpeed,
+            }
+
+            setTelemetryHistory(prevHistory => {
+                const newHistory = [...prevHistory, newHistoryPoint];
+                if (newHistory.length > MAX_HISTORY_LENGTH) {
+                  return newHistory.slice(newHistory.length - MAX_HISTORY_LENGTH);
+                }
+                return newHistory;
+            });
+            
+            return {
+                ...prevData,
+                altitude: newAltitude,
+                speed: newSpeed,
+                battery: Math.max(0, prevData.battery - 0.05),
+                latitude: prevData.latitude + (Math.random() - 0.5) * 0.0001,
+                longitude: prevData.longitude + (Math.random() - 0.5) * 0.0001,
+                roll: (prevData.roll + (Math.random() - 0.5) * 5),
+                pitch: (prevData.pitch + (Math.random() - 0.5) * 3),
+              yaw: (prevData.yaw + (Math.random() - 0.5) * 2),
+              // Simulate heartbeat (mostly true, occasional drop)
+              heartbeat: Math.random() > 0.02,
+              // Randomly pick a flight mode from a list (infrequent changes)
+              flightMode: (Math.random() > 0.98) ? ['MANUAL','AUTO','RTL','LOITER','STABILIZE'][Math.floor(Math.random()*5)] : prevData.flightMode,
+            }
+        });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isConnected]);
+
+  return { telemetry, isConnected, telemetryHistory };
+}
