@@ -116,13 +116,30 @@ export default function HomePage() {
 
       {/* Dashboard Preview */}
       <section className="max-w-6xl mx-auto px-6 py-20">
+        <div className="mb-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-2 bg-gradient-to-r from-blue-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent">Dashboard Preview</h2>
+          <p className="text-slate-400">See the live dashboard in action</p>
+        </div>
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-30 blur-3xl rounded-3xl"></div>
-          <div className="relative bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-2xl p-8 border border-slate-600/50 h-96 flex items-center justify-center backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300">
-            <div className="text-center">
-              <Zap className="w-16 h-16 text-cyan-400 mx-auto mb-4 animate-pulse" />
-              <p className="text-slate-300 text-lg font-semibold">Live Dashboard Preview</p>
-              <p className="text-slate-500 text-sm mt-2">Real-time flight monitoring interface</p>
+          <div className="relative bg-slate-950 rounded-2xl border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300 shadow-2xl" style={{ aspectRatio: '16/9' }}>
+            <video
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+              onError={(e) => console.error('Video failed to load:', e)}
+            >
+              <source src="/dashboard.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            {/* Fallback text if video doesn't load */}
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 opacity-0 hover:opacity-100 transition-opacity">
+              <p className="text-slate-300 text-center">
+                <div className="text-sm mb-2">Dashboard Preview Video</div>
+                <div className="text-xs text-slate-500">Real-time flight monitoring interface</div>
+              </p>
             </div>
           </div>
         </div>
