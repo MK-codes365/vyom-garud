@@ -122,12 +122,17 @@ export default function HomePage() {
         </div>
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-30 blur-3xl rounded-3xl"></div>
+<<<<<<< HEAD
           <div className="relative bg-slate-950 rounded-2xl border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300 shadow-2xl" style={{ aspectRatio: '16/9' }}>
+=======
+          <div className="relative bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-2xl p-0 border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300">
+>>>>>>> fc4ba3ddeeb263d1b34fe7866e13a730297abc4f
             <video
               autoPlay
               muted
               loop
               playsInline
+<<<<<<< HEAD
               className="w-full h-full object-cover"
               onError={(e) => console.error('Video failed to load:', e)}
             >
@@ -141,6 +146,13 @@ export default function HomePage() {
                 <div className="text-xs text-slate-500">Real-time flight monitoring interface</div>
               </p>
             </div>
+=======
+              className="w-full h-96 object-cover"
+              style={{ objectFit: 'cover' }}
+            >
+              <source src="/dashboard.mp4" type="video/mp4" />
+            </video>
+>>>>>>> fc4ba3ddeeb263d1b34fe7866e13a730297abc4f
           </div>
         </div>
       </section>
