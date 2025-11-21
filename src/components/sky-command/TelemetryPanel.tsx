@@ -6,6 +6,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useDroneData } from "@/hooks/use-drone-data";
+import { useDroneControl } from "@/context/drone-control-context";
 import { TelemetryCard } from "./TelemetryCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -31,6 +32,7 @@ const AttitudeIndicator = ({ roll, pitch, yaw }: { roll: number; pitch: number; 
 
 export function TelemetryPanel() {
   const { telemetry, isConnected } = useDroneData();
+  const { flightMode } = useDroneControl();
 
   if (!isConnected) {
     return (
@@ -72,7 +74,7 @@ export function TelemetryPanel() {
       />
       <TelemetryCard
         title="Flight Mode"
-        value={telemetry.flightMode}
+        value={flightMode}
         icon={Layers}
       />
     </div>

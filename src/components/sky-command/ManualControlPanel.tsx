@@ -13,8 +13,6 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowDown,
-  ChevronsUp,
-  ChevronsDown,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -26,7 +24,7 @@ export function ManualControlPanel() {
   const [speed, setSpeed] = useState([50]);
   const [altitude, setAltitude] = useState([75]);
   const { toast } = useToast();
-  const { moveDrone, setAltitude: setDroneAltitude } = useDroneControl();
+  const { moveDrone, setAltitude: setDroneAltitude, flightMode, setFlightMode } = useDroneControl();
   const [activeControl, setActiveControl] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -38,8 +36,15 @@ export function ManualControlPanel() {
     if (control === 'Backward') moveDrone('backward', distance);
     if (control === 'Turn Left') moveDrone('left', distance);
     if (control === 'Turn Right') moveDrone('right', distance);
-    if (control === 'Ascend') moveDrone('ascend');
-    if (control === 'Descend') moveDrone('descend');
+  };
+
+  const handleToggleManualMode = () => {
+    const newMode = flightMode === 'AUTO' ? 'MANUAL' : 'AUTO';
+    setFlightMode(newMode);
+    toast({
+      title: `Flight Mode: ${newMode}`,
+      description: newMode === 'MANUAL' ? 'Manual control enabled' : 'Auto mode enabled',
+    });
   };
 
   const handleMouseDown = (control: string) => {
@@ -92,6 +97,26 @@ export function ManualControlPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col space-y-6 pt-6">
+        {/* Flight Mode Toggle */}
+        <div className="p-3 rounded-md bg-slate-800/50 border border-slate-700 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-300">Flight Mode</p>
+            <p className={`text-lg font-bold ${flightMode === 'MANUAL' ? 'text-green-400' : 'text-blue-400'}`}>
+              {flightMode}
+            </p>
+          </div>
+          <Button
+            onClick={handleToggleManualMode}
+            className={`px-4 py-2 font-semibold transition-all ${
+              flightMode === 'MANUAL'
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
+          >
+            {flightMode === 'MANUAL' ? 'Switch to AUTO' : 'Switch to MANUAL'}
+          </Button>
+        </div>
+
         <div className="space-y-4">
           {/* Forward */}
           <div className="flex justify-center">
@@ -107,7 +132,7 @@ export function ManualControlPanel() {
             </Button>
           </div>
 
-          {/* Left, Ascend, Right */}
+          {/* Left, Right */}
           <div className="flex justify-center gap-2">
             <Button 
               variant="outline" 
@@ -122,16 +147,6 @@ export function ManualControlPanel() {
             <Button 
               variant="outline" 
               size="icon" 
-              className={`w-12 h-12 bg-slate-700 border-slate-600 hover:bg-cyan-600 hover:border-cyan-500 transition-all ${activeControl === 'Ascend' ? 'bg-cyan-600 border-cyan-500' : ''}`}
-              onMouseDown={() => handleMouseDown('Ascend')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-            >
-              <ChevronsUp />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
               className={`w-12 h-12 bg-slate-700 border-slate-600 hover:bg-blue-600 hover:border-blue-500 transition-all ${activeControl === 'Turn Right' ? 'bg-blue-600 border-blue-500' : ''}`}
               onMouseDown={() => handleMouseDown('Turn Right')}
               onMouseUp={handleMouseUp}
@@ -141,8 +156,8 @@ export function ManualControlPanel() {
             </Button>
           </div>
           
-          {/* Backward & Descend */}
-          <div className="flex justify-center gap-2">
+          {/* Backward */}
+          <div className="flex justify-center">
             <Button 
               variant="outline" 
               size="icon" 
@@ -152,16 +167,6 @@ export function ManualControlPanel() {
               onMouseLeave={handleMouseUp}
             >
               <ArrowDown />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className={`w-12 h-12 bg-slate-700 border-slate-600 hover:bg-cyan-600 hover:border-cyan-500 transition-all ${activeControl === 'Descend' ? 'bg-cyan-600 border-cyan-500' : ''}`}
-              onMouseDown={() => handleMouseDown('Descend')}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-            >
-              <ChevronsDown />
             </Button>
           </div>
         </div>

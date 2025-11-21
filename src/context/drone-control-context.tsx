@@ -11,10 +11,39 @@ export interface Geofence {
   active: boolean;
 }
 
+export interface Waypoint {
+  id: number;
+  latitude: number;
+  longitude: number;
+  altitude: number;
+  speed: number;
+  order: number;
+}
+
+export interface Mission {
+  id: string;
+  name: string;
+  waypoints: Waypoint[];
+  isActive: boolean;
+  createdAt: number;
+}
+
 interface DroneControlContextType {
   droneOffset: { lat: number; lng: number; alt: number };
   moveDrone: (direction: string, distance: number) => void;
   setAltitude: (altitude: number) => void;
+  flightMode: 'AUTO' | 'MANUAL';
+  setFlightMode: (mode: 'AUTO' | 'MANUAL') => void;
+  isArmed: boolean;
+  arm: () => void;
+  disarm: () => void;
+  returnToHome: () => void;
+  emergencyStop: () => void;
+  mission: Mission;
+  addWaypoint: (waypoint: Omit<Waypoint, 'id' | 'order'>) => void;
+  removeWaypoint: (id: number) => void;
+  uploadMission: () => void;
+  clearMission: () => void;
   geofences: Geofence[];
   addGeofence: (geofence: Omit<Geofence, 'id'>) => void;
   removeGeofence: (id: number) => void;
@@ -27,6 +56,15 @@ const DroneControlContext = createContext<DroneControlContextType | undefined>(u
 
 export function DroneControlProvider({ children }: { children: React.ReactNode }) {
   const [droneOffset, setDroneOffset] = useState({ lat: 0, lng: 0, alt: 0 });
+  const [flightMode, setFlightMode] = useState<'AUTO' | 'MANUAL'>('AUTO');
+  const [isArmed, setIsArmed] = useState(false);
+  const [mission, setMission] = useState<Mission>({
+    id: 'default',
+    name: 'Default Mission',
+    waypoints: [],
+    isActive: false,
+    createdAt: Date.now(),
+  });
   const [geofences, setGeofences] = useState<Geofence[]>([
     { id: 1, name: "Mission Area", lat: 0, lng: 0, radius: 500, active: true },
     { id: 2, name: "No-Fly Zone 1", lat: 0.003, lng: 0.003, radius: 100, active: true },
@@ -117,12 +155,75 @@ export function DroneControlProvider({ children }: { children: React.ReactNode }
     );
   }, []);
 
+  // Immediate Control Functions
+  const arm = useCallback(() => {
+    setIsArmed(true);
+  }, []);
+
+  const disarm = useCallback(() => {
+    setIsArmed(false);
+    setMission(prev => ({ ...prev, isActive: false }));
+  }, []);
+
+  const returnToHome = useCallback(() => {
+    setDroneOffset({ lat: 0, lng: 0, alt: 0 });
+  }, []);
+
+  const emergencyStop = useCallback(() => {
+    setIsArmed(false);
+    setMission(prev => ({ ...prev, isActive: false }));
+    setDroneOffset({ lat: 0, lng: 0, alt: 0 });
+  }, []);
+
+  // Mission Functions
+  const addWaypoint = useCallback((waypoint: Omit<Waypoint, 'id' | 'order'>) => {
+    const id = Math.max(...mission.waypoints.map(w => w.id), 0) + 1;
+    const order = mission.waypoints.length + 1;
+    setMission(prev => ({
+      ...prev,
+      waypoints: [...prev.waypoints, { ...waypoint, id, order }],
+    }));
+  }, [mission.waypoints]);
+
+  const removeWaypoint = useCallback((id: number) => {
+    setMission(prev => ({
+      ...prev,
+      waypoints: prev.waypoints
+        .filter(w => w.id !== id)
+        .map((w, idx) => ({ ...w, order: idx + 1 })),
+    }));
+  }, []);
+
+  const uploadMission = useCallback(() => {
+    setMission(prev => ({ ...prev, isActive: true }));
+  }, []);
+
+  const clearMission = useCallback(() => {
+    setMission(prev => ({
+      ...prev,
+      waypoints: [],
+      isActive: false,
+    }));
+  }, []);
+
   return (
     <DroneControlContext.Provider 
       value={{ 
         droneOffset, 
         moveDrone, 
         setAltitude,
+        flightMode,
+        setFlightMode,
+        isArmed,
+        arm,
+        disarm,
+        returnToHome,
+        emergencyStop,
+        mission,
+        addWaypoint,
+        removeWaypoint,
+        uploadMission,
+        clearMission,
         geofences,
         addGeofence,
         removeGeofence,

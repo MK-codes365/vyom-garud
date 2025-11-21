@@ -3,10 +3,17 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'VyomGarud',
-  description: 'Cloud-based Ground Control System for drones.',
+  title: 'VyomGarud - Cloud-based Drone Control System',
+  description: 'Enterprise-grade drone control with real-time telemetry, AI-powered flight optimization, mission planning, and advanced monitoring.',
   icons: {
     icon: '/vyomgarud-logo.svg',
+  },
+  metadataBase: new URL('https://vyomgarud.vercel.app'),
+  openGraph: {
+    title: 'VyomGarud - Cloud-based Drone Control System',
+    description: 'Enterprise-grade drone control with real-time telemetry and AI optimization',
+    url: 'https://vyomgarud.vercel.app',
+    type: 'website',
   },
 };
 
@@ -18,6 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <meta charSet="utf-8" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

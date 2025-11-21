@@ -68,7 +68,7 @@ export function LiveTelemetryChart() {
                                   {item.name}
                                 </span>
                                 <span className="font-bold" style={{color: item.color}}>
-                                  {item.value.toFixed(1)} {item.name === 'Altitude' ? 'm' : 'm/s'}
+                                  {typeof item.value === 'number' ? item.value.toFixed(1) : item.value} {item.name === 'Altitude' ? 'm' : 'm/s'}
                                 </span>
                               </div>
                             ))}
