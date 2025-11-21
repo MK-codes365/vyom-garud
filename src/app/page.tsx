@@ -122,25 +122,17 @@ export default function HomePage(): JSX.Element {
         </div>
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-30 blur-3xl rounded-3xl"></div>
-          <div className="relative bg-slate-950 rounded-2xl border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300 shadow-2xl" style={{ aspectRatio: '16/9' }}>
+          <div className="relative bg-slate-950 rounded-2xl border border-slate-600/50 overflow-hidden backdrop-blur-sm hover:border-cyan-500/50 transition-colors duration-300 shadow-2xl" style={{ aspectRatio: '16/9', minHeight: '400px' }}>
             <video
               autoPlay
               muted
               loop
               playsInline
               className="w-full h-full object-cover"
-              onError={(e) => console.error('Video failed to load:', e)}
+              style={{ backgroundColor: '#000' }}
             >
               <source src="/dashboard.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
-            {/* Fallback text if video doesn't load */}
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-900/80 opacity-0 hover:opacity-100 transition-opacity">
-              <p className="text-slate-300 text-center">
-                <div className="text-sm mb-2">Dashboard Preview Video</div>
-                <div className="text-xs text-slate-500">Real-time flight monitoring interface</div>
-              </p>
-            </div>
           </div>
         </div>
       </section>
