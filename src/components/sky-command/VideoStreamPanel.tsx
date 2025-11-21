@@ -43,14 +43,14 @@ export function VideoStreamPanel() {
   // Set initial video source
   useEffect(() => {
     if (activeCamera) {
-      // Use telemetry MP4 for video stream
+      // Use telemetry.mp4 for all cameras
       setVideoSource("/telemetry.mp4");
     }
   }, [activeCamera]);
 
   const handleSwitchCamera = (cameraId: string) => {
     switchCamera(cameraId);
-    // All cameras use the same MP4 file
+    // All cameras use the same telemetry MP4 file
     setVideoSource("/telemetry.mp4");
   };
 
@@ -120,7 +120,7 @@ export function VideoStreamPanel() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="relative bg-slate-950 aspect-square md:aspect-video lg:aspect-video flex items-center justify-center border-t border-slate-700/50 overflow-hidden" style={{ maxHeight: '300px' }}>
+          <div className="relative bg-slate-950 aspect-video flex items-center justify-center border-t border-slate-700/50 overflow-hidden">
             {videoSource && (
               <video
                 ref={videoRef as React.RefObject<HTMLVideoElement>}
