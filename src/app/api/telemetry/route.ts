@@ -20,10 +20,11 @@ export async function GET(request: Request) {
     };
 
     try {
-      // Fetch from unified simulator on port 5000
+      // Fetch from unified simulator on port 5000 (with timeout)
       const simulatorResponse = await fetch('http://127.0.0.1:5000', {
         method: 'GET',
         cache: 'no-store',
+        signal: AbortSignal.timeout(2000), // 2 second timeout
       });
 
       if (simulatorResponse.ok) {
@@ -42,21 +43,31 @@ export async function GET(request: Request) {
     }
 
     // Fall back to built-in MAVLink simulator
-    const mavlinkMessages = generateMAVLinkMessages();
+    try {
+      const mavlinkMessages = generateMAVLinkMessages();
 
-    // Merge parsed messages
-    for (const msg of mavlinkMessages) {
-      const parsed = parseMAVLinkMessage(msg);
-      telemetry = { ...telemetry, ...parsed };
+      // Merge parsed messages
+      for (const msg of mavlinkMessages) {
+        const parsed = parseMAVLinkMessage(msg);
+        telemetry = { ...telemetry, ...parsed };
+      }
+
+      // Return both raw MAVLink messages and parsed telemetry
+      return Response.json({
+        success: true,
+        timestamp: Date.now(),
+        mavlink_messages: mavlinkMessages,
+        telemetry: telemetry,
+      });
+    } catch (error) {
+      console.error('Error generating MAVLink telemetry:', error);
+      // Return fallback telemetry if MAVLink generation fails
+      return Response.json({
+        success: true,
+        timestamp: Date.now(),
+        telemetry: telemetry,
+      });
     }
-
-    // Return both raw MAVLink messages and parsed telemetry
-    return Response.json({
-      success: true,
-      timestamp: Date.now(),
-      mavlink_messages: mavlinkMessages,
-      telemetry: telemetry,
-    });
   } catch (error) {
     console.error('Error generating telemetry:', error);
     return Response.json(

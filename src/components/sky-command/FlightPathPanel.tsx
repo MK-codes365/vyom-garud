@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { useDroneData } from "@/hooks/use-drone-data";
 import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Dynamically import map to avoid SSR issues
 const MapComponent = dynamic(() => import('./MapComponent'), {
@@ -43,12 +44,19 @@ export function FlightPathPanel() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="w-full h-96 bg-slate-900/50">
-          <MapComponent 
-            dronePosition={dronePosition}
-            latitude={telemetry.latitude}
-            longitude={telemetry.longitude}
-            altitude={telemetry.altitude}
-          />
+          <ErrorBoundary componentName="Map">
+            <MapComponent 
+              dronePosition={dronePosition}
+              latitude={telemetry.latitude}
+              longitude={telemetry.longitude}
+              altitude={telemetry.altitude}
+            />
+          </ErrorBoundary>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}          />
         </div>
       </CardContent>
     </Card>

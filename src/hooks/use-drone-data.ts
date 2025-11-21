@@ -119,7 +119,9 @@ export function useDroneData() {
         if (!isSubscribed) return;
 
         try {
-          const response = await fetch('/api/telemetry');
+          const response = await fetch('/api/telemetry', {
+            cache: 'no-store',
+          });
           const data = await response.json();
 
           if (data.success && data.telemetry) {
@@ -150,7 +152,7 @@ export function useDroneData() {
           console.error('Polling error:', error);
           setIsConnected(false);
         }
-      }, 100);
+      }, 1000); // Changed from 100ms to 1000ms for polling to reduce server load
     };
 
     connectWebSocket();

@@ -21,17 +21,45 @@ export async function GET(request: NextRequest) {
             if (isClosed || !interval) return;
             
             try {
-              // Fetch latest telemetry from unified simulator
-              const response = await fetch('http://127.0.0.1:5000', {
-                method: 'GET',
-                cache: 'no-store',
-              });
+              // Try to fetch from unified simulator on localhost (only works in development)
+              let telemetryData = null;
+              
+              try {
+                const response = await fetch('http://127.0.0.1:5000', {
+                  method: 'GET',
+                  cache: 'no-store',
+                  signal: AbortSignal.timeout(2000), // 2 second timeout
+                });
 
-              if (response.ok && !isClosed) {
-                const data = await response.json();
+                if (response.ok) {
+                  const data = await response.json();
+                  telemetryData = data.telemetry;
+                }
+              } catch (error) {
+                // Simulator not available, that's okay - we'll use fallback
+                console.log('Simulator unavailable, using fallback data');
+              }
+
+              // If no data from simulator, use fallback telemetry
+              if (!telemetryData) {
+                telemetryData = {
+                  altitude: 100 + Math.random() * 20,
+                  speed: Math.random() * 15,
+                  latitude: 34.0522 + (Math.random() - 0.5) * 0.01,
+                  longitude: -118.2437 + (Math.random() - 0.5) * 0.01,
+                  battery: 85 + Math.random() * 10,
+                  roll: (Math.random() - 0.5) * 10,
+                  pitch: (Math.random() - 0.5) * 10,
+                  yaw: Math.random() * 360,
+                  heartbeat: true,
+                  flightMode: 'MANUAL',
+                };
+              }
+
+              if (!isClosed) {
                 const event = `data: ${JSON.stringify({
                   type: 'telemetry',
-                  telemetry: data.telemetry,
+                  telemetry: telemetryData,
                 })}\n\n`;
                 
                 controller.enqueue(encoder.encode(event));
