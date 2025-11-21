@@ -3,6 +3,88 @@ import type { NextRequest } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+// In-memory state for smooth drone simulation
+let simulationState = {
+  latitude: 34.0522,
+  longitude: -118.2437,
+  altitude: 100,
+  speed: 5,
+  battery: 85,
+  roll: 0,
+  pitch: 0,
+  yaw: 0,
+  heading: 45,
+  lastUpdate: Date.now(),
+};
+
+// Reset state every hour to prevent drift
+function resetSimulationIfNeeded() {
+  const now = Date.now();
+  const oneHour = 60 * 60 * 1000;
+  
+  if (now - simulationState.lastUpdate > oneHour) {
+    simulationState = {
+      latitude: 34.0522,
+      longitude: -118.2437,
+      altitude: 100,
+      speed: 5,
+      battery: 85,
+      roll: 0,
+      pitch: 0,
+      yaw: 0,
+      heading: 45,
+      lastUpdate: now,
+    };
+  }
+}
+
+// Smooth random walk for realistic drone movement
+function updateSimulation() {
+  resetSimulationIfNeeded();
+  
+  const now = Date.now();
+  const deltaTime = (now - simulationState.lastUpdate) / 1000; // seconds
+  simulationState.lastUpdate = now;
+  
+  // Smooth circular flight pattern (orbit)
+  const time = now / 10000; // Slow time progression
+  const radius = 0.0015; // ~150 meters at equator
+  
+  simulationState.latitude = 34.0522 + Math.sin(time) * radius;
+  simulationState.longitude = -118.2437 + Math.cos(time) * radius;
+  
+  // Smooth altitude changes (simulate climbing/descending)
+  simulationState.altitude = 100 + Math.sin(time * 0.5) * 30;
+  
+  // Smooth speed variations
+  simulationState.speed = 8 + Math.sin(time * 0.3) * 4;
+  
+  // Gradual heading changes
+  simulationState.heading = (time * 50) % 360;
+  
+  // Slight attitude changes
+  simulationState.roll = Math.sin(time * 0.7) * 15;
+  simulationState.pitch = Math.cos(time * 0.6) * 10;
+  simulationState.yaw = simulationState.heading;
+  
+  // Gradual battery drain
+  const flightTime = (now - (simulationState.lastUpdate - 3600000)) / 1000 / 3600; // hours
+  simulationState.battery = Math.max(20, 95 - flightTime * 5);
+  
+  return {
+    latitude: parseFloat(simulationState.latitude.toFixed(6)),
+    longitude: parseFloat(simulationState.longitude.toFixed(6)),
+    altitude: parseFloat(simulationState.altitude.toFixed(1)),
+    speed: parseFloat(simulationState.speed.toFixed(1)),
+    battery: parseFloat(simulationState.battery.toFixed(1)),
+    roll: parseFloat(simulationState.roll.toFixed(2)),
+    pitch: parseFloat(simulationState.pitch.toFixed(2)),
+    yaw: parseFloat(simulationState.yaw.toFixed(2)),
+    heartbeat: true,
+    flightMode: 'AUTO',
+  };
+}
+
 export async function GET(request: NextRequest) {
   // For WebSocket upgrade, Next.js doesn't natively support WebSocket in API routes
   // So we'll return SSE (Server-Sent Events) which provides real-time streaming
@@ -36,24 +118,12 @@ export async function GET(request: NextRequest) {
                   telemetryData = data.telemetry;
                 }
               } catch (error) {
-                // Simulator not available, that's okay - we'll use fallback
-                console.log('Simulator unavailable, using fallback data');
+                // Simulator not available, use smooth fallback simulation
               }
 
-              // If no data from simulator, use fallback telemetry
+              // If no data from simulator, use smooth fallback telemetry
               if (!telemetryData) {
-                telemetryData = {
-                  altitude: 100 + Math.random() * 20,
-                  speed: Math.random() * 15,
-                  latitude: 34.0522 + (Math.random() - 0.5) * 0.01,
-                  longitude: -118.2437 + (Math.random() - 0.5) * 0.01,
-                  battery: 85 + Math.random() * 10,
-                  roll: (Math.random() - 0.5) * 10,
-                  pitch: (Math.random() - 0.5) * 10,
-                  yaw: Math.random() * 360,
-                  heartbeat: true,
-                  flightMode: 'MANUAL',
-                };
+                telemetryData = updateSimulation();
               }
 
               if (!isClosed) {
